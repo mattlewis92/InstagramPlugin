@@ -61,14 +61,15 @@ Instagram.share(canvasIdOrDataUrl, function (err) {
 });
 ```
 
-Share library __asset__ image or video. The function shareAsset (iOS only) accepts a string with asset local identifier, and a callback function as parameters:
+Share library __asset__ image or video. The function shareAsset accepts a string with asset local identifier, a string that states the media type (`image/*` or `video/*`), and a callback function as parameters:
 ```javascript
 var assetLocalIdentifier = "24320B60-1F52-46AC-BE4C-1202F02B9D00/L0/001";
+var mediaType = "image/*";
 Instagram.shareAsset(function(result) {
-            console.log('Instagram.shareAsset success: ' + result);
-        }, function(e) {
-            console.log('Instagram.shareAsset error: ' + e);
-        }, assetLocalIdentifier);
+    console.log('Instagram.shareAsset success: ' + result);
+}, function(e) {
+    console.log('Instagram.shareAsset error: ' + e);
+}, assetLocalIdentifier, mediaType);
 ```
 You can get a LocalIdentifier by using Photos Framework [Fetching Assets](https://developer.apple.com/library/ios/documentation/Photos/Reference/PHAsset_Class/#//apple_ref/doc/uid/TP40014383-CH1-SW2) API
 

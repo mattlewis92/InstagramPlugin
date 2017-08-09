@@ -1,7 +1,7 @@
 /*
     The MIT License (MIT)
     Copyright (c) 2013 Vlad Stirbu
-    
+
     Permission is hereby granted, free of charge, to any person obtaining
     a copy of this software and associated documentation files (the
     "Software"), to deal in the Software without restriction, including
@@ -9,10 +9,10 @@
     distribute, sublicense, and/or sell copies of the Software, and to
     permit persons to whom the Software is furnished to do so, subject to
     the following conditions:
-    
+
     The above copyright notice and this permission notice shall be
     included in all copies or substantial portions of the Software.
-    
+
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -57,12 +57,12 @@ public class CDVInstagramPlugin extends CordovaPlugin {
     };
 
 	CallbackContext cbContext;
-	
+
 	@Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-		
+
 		this.cbContext = callbackContext;
-		
+
         if (action.equals("share")) {
             String imageString = args.getString(0);
             String captionString = args.getString(1);
@@ -74,12 +74,21 @@ public class CDVInstagramPlugin extends CordovaPlugin {
             return true;
         } else if (action.equals("isInstalled")) {
         	this.isInstalled();
+        } else if (action.equals("shareAsset")) {
+            String mediaPath = args.getString(0);
+            String mediaType = args.getString(1);
+
+            PluginResult result = new PluginResult(Status.NO_RESULT);
+            result.setKeepCallback(true);
+
+            this.shareAsset(mediaPath, mediaType);
+            return true;
         } else {
         	callbackContext.error("Invalid Action");
         }
         return false;
     }
-	
+
 	private void isInstalled() {
 		try {
 			this.webView.getContext().getPackageManager().getApplicationInfo("com.instagram.android", 0);
@@ -90,12 +99,12 @@ public class CDVInstagramPlugin extends CordovaPlugin {
 	}
 
     private void share(String imageString, String captionString) {
-        if (imageString != null && imageString.length() > 0) { 
+        if (imageString != null && imageString.length() > 0) {
         	byte[] imageData = Base64.decode(imageString, 0);
-        	
-        	File file = null;  
+
+        	File file = null;
             FileOutputStream os = null;
-        	
+
         	File parentDir = this.webView.getContext().getExternalFilesDir(null);
             File[] oldImages = parentDir.listFiles(OLD_IMAGE_FILTER);
             for (File oldImage : oldImages) {
@@ -117,20 +126,30 @@ public class CDVInstagramPlugin extends CordovaPlugin {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-        	
+
         	Intent shareIntent = new Intent(Intent.ACTION_SEND);
         	shareIntent.setType("image/*");
         	shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
         	shareIntent.putExtra(Intent.EXTRA_TEXT, captionString);
         	shareIntent.setPackage("com.instagram.android");
-        	
+
         	this.cordova.startActivityForResult((CordovaPlugin) this, Intent.createChooser(shareIntent, "Share to"), 12345);
-        	
+
         } else {
             this.cbContext.error("Expected one non-empty string argument.");
         }
     }
-    
+
+    private void shareAsset(String mediaPath, String mediaType) {
+        File media = new File(mediaPath);
+        Uri uri = Uri.fromFile(media);
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType(mediaType);
+        shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+        shareIntent.setPackage("com.instagram.android");
+        this.cordova.startActivityForResult((CordovaPlugin) this, Intent.createChooser(shareIntent, "Share to"), 12345);
+    }
+
     @Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
     	if (resultCode == Activity.RESULT_OK) {
